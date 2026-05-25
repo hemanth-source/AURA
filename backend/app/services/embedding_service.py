@@ -12,10 +12,19 @@ socket.getaddrinfo = my_getaddrinfo
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 def resolve_hf_ip():
-    """Resolve api-inference.huggingface.co via Google or Cloudflare DoH to bypass local DNS blockages."""
+    """Resolve api-inference.huggingface.co via Google or Cloudflare DoH direct IPs to bypass local DNS bootstrap failures."""
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    # Try Google DoH direct via IP (8.8.8.8)
     try:
-        # Try Google DNS-over-HTTPS (DoH)
-        r = requests.get("https://dns.google/resolve?name=api-inference.huggingface.co&type=A", timeout=4)
+        headers = {"Host": "dns.google"}
+        r = requests.get(
+            "https://8.8.8.8/resolve?name=api-inference.huggingface.co&type=A",
+            headers=headers,
+            verify=False,
+            timeout=4
+        )
         if r.status_code == 200:
             data = r.json()
             if "Answer" in data and len(data["Answer"]) > 0:
@@ -23,11 +32,13 @@ def resolve_hf_ip():
     except Exception:
         pass
 
+    # Try Cloudflare DoH direct via IP fallback (1.1.1.1)
     try:
-        # Try Cloudflare DNS-over-HTTPS (DoH) fallback
+        headers = {"Host": "cloudflare-dns.com", "accept": "application/dns-json"}
         r = requests.get(
-            "https://cloudflare-dns.com/dns-query?name=api-inference.huggingface.co&type=A",
-            headers={"accept": "application/dns-json"},
+            "https://1.1.1.1/dns-query?name=api-inference.huggingface.co&type=A",
+            headers=headers,
+            verify=False,
             timeout=4
         )
         if r.status_code == 200:
