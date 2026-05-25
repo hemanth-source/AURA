@@ -9,35 +9,28 @@ from app.agents.memory_agent import store_memory
 router = APIRouter()
 
 
-import traceback
-
 @router.post("/upload")
 async def upload_lecture(file: UploadFile = File(...)):
-    try:
-        import os
-        os.makedirs("temp", exist_ok=True)
-        file_location = f"temp/{file.filename}"
 
-        with open(file_location, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+    import os
+    os.makedirs("temp", exist_ok=True)
+    file_location = f"temp/{file.filename}"
 
-        transcript = transcribe_audio(file_location)
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
-        summary = generate_summary(transcript)
+    transcript = transcribe_audio(file_location)
 
-        lecture_id = str(uuid.uuid4())
+    summary = generate_summary(transcript)
 
-        store_memory(transcript, lecture_id)
+    lecture_id = str(uuid.uuid4())
 
-        return {
-            "transcript": transcript,
-            "summary": summary
-        }
-    except Exception as e:
-        return {
-            "error_detail": str(e),
-            "traceback": traceback.format_exc()
-        }
+    store_memory(transcript, lecture_id)
+
+    return {
+        "transcript": transcript,
+        "summary": summary
+    }
 
 
 @router.post("/transcribe")
