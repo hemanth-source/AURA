@@ -1,6 +1,13 @@
 import requests
 import time
 import os
+import socket
+
+# Force IPv4 resolution to bypass Linux container IPv6 DNS lookup issues
+orig_getaddrinfo = socket.getaddrinfo
+def my_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = my_getaddrinfo
 
 API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
 HF_TOKEN = os.getenv("HF_TOKEN")
