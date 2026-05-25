@@ -3,8 +3,6 @@ uvicorn
 python-multipart
 openai
 qdrant-client
-sentence-transformers
 python-dotenv
 requests
-numpy
 pydantic
